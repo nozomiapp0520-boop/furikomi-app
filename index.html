@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>振込予定 &amp; Todo</title>
+<meta name="theme-color" content="#23235E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="振込予定">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Kiwi+Maru:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" class="app">
+  <!-- ===== ログイン ===== -->
+  <section id="screen-login" class="screen screen-login hidden">
+    <div class="sky sky-tall"></div>
+    <div class="login-box">
+      <h1 class="title-glow">振込予定 &amp; Todo</h1>
+      <p class="login-lead">メールアドレスに届く6桁のコードでログインします。</p>
+      <form id="login-form" class="login-form">
+        <label for="login-email">メールアドレス</label>
+        <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+        <button type="submit" class="btn-pink">コードを送る</button>
+      </form>
+      <form id="otp-form" class="login-form hidden">
+        <label for="login-otp">届いた6桁のコード</label>
+        <input id="login-otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="8" required>
+        <button type="submit" class="btn-pink">ログイン</button>
+        <button type="button" id="otp-back" class="btn-ghost">メールアドレスを変える</button>
+      </form>
+      <p id="login-msg" class="login-msg"></p>
+    </div>
+  </section>
+
+  <!-- ===== 振込予定 ===== -->
+  <section id="screen-jobs" class="screen screen-jobs hidden">
+    <div class="sky sky-tall">
+      <svg class="sky-art" aria-hidden="true" viewBox="0 0 393 330" preserveAspectRatio="xMidYMin slice">
+        <g stroke="#B9BAF3" stroke-width="1" stroke-opacity="0.55" fill="none">
+          <path d="M250 42 L286 70 L318 58 L344 92 L326 128"/><path d="M286 70 L300 108 L326 128"/><path d="M60 60 L92 48 L118 72"/>
+        </g>
+        <g fill="#fff">
+          <circle cx="250" cy="42" r="2.4"/><circle cx="286" cy="70" r="3"/><circle cx="318" cy="58" r="2"/><circle cx="344" cy="92" r="2.6"/><circle cx="326" cy="128" r="2"/><circle cx="300" cy="108" r="1.8"/>
+          <circle cx="60" cy="60" r="2"/><circle cx="92" cy="48" r="2.6"/><circle cx="118" cy="72" r="1.8"/>
+          <circle cx="40" cy="150" r="1.4"/><circle cx="180" cy="36" r="1.4"/><circle cx="210" cy="96" r="1.2"/><circle cx="150" cy="120" r="1.6"/><circle cx="370" cy="40" r="1.4"/><circle cx="20" cy="40" r="1.2"/><circle cx="130" cy="20" r="1.2"/><circle cx="230" cy="150" r="1.2"/><circle cx="352" cy="170" r="1.4"/><circle cx="80" cy="110" r="1.2"/>
+        </g>
+        <g fill="#FFF3A6"><path d="M300 28 l2.6 7.4 7.4 2.6 -7.4 2.6 -2.6 7.4 -2.6 -7.4 -7.4 -2.6 7.4 -2.6z"/></g>
+        <g fill="#9FEFF4"><path d="M160 70 l2 5.6 5.6 2 -5.6 2 -2 5.6 -2 -5.6 -5.6 -2 5.6 -2z"/></g>
+        <g fill="#F6A9CF"><path d="M352 120 l2.2 6.2 6.2 2.2 -6.2 2.2 -2.2 6.2 -2.2 -6.2 -6.2 -2.2 6.2 -2.2z"/></g>
+        <g fill="#fff"><path d="M30 100 l1.6 4.4 4.4 1.6 -4.4 1.6 -1.6 4.4 -1.6 -4.4 -4.4 -1.6 4.4 -1.6z"/></g>
+        <g transform="translate(380 30)"><g class="ss" style="animation-delay:1.2s;animation-duration:9.5s"><line x1="0" y1="0" x2="80" y2="-45" stroke="#fff" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/><line x1="0" y1="0" x2="40" y2="-22.5" stroke="#fff" stroke-opacity=".8" stroke-width="2" stroke-linecap="round"/><circle r="2.2" fill="#fff"/></g></g>
+        <g transform="translate(300 90)"><g class="ss" style="animation-delay:5.8s;animation-duration:13s"><line x1="0" y1="0" x2="60" y2="-34" stroke="#fff" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"/><line x1="0" y1="0" x2="30" y2="-17" stroke="#fff" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round"/><circle r="1.8" fill="#fff"/></g></g>
+        <g transform="translate(240 20)"><g class="ss" style="animation-delay:9.1s;animation-duration:16s"><line x1="0" y1="0" x2="95" y2="-53" stroke="#FFF3A6" stroke-opacity=".35" stroke-width="2.2" stroke-linecap="round"/><line x1="0" y1="0" x2="48" y2="-27" stroke="#FFF3A6" stroke-opacity=".85" stroke-width="2.2" stroke-linecap="round"/><circle r="2.4" fill="#FFF3A6"/></g></g>
+        <circle cx="70" cy="44" r="64" fill="#FFE98A" opacity=".1"/>
+        <path d="M86 -2 A46 46 0 1 0 86 90 A58 58 0 0 1 86 -2 Z" fill="#FFE98A"/>
+      </svg>
+    </div>
+
+    <header class="jobs-header">
+      <div class="row-between">
+        <h1 class="title-glow">振込予定</h1>
+        <button id="jobs-add" class="fab-pink" aria-label="予定を追加">+</button>
+      </div>
+      <div class="month-pill">
+        <button id="month-prev" class="round-btn" aria-label="前の月">‹</button>
+        <div class="month-center"><div id="month-label" class="month-label">2026年11月</div><div id="month-count" class="month-sub">0件の振込予定</div></div>
+        <button id="month-next" class="round-btn" aria-label="次の月">›</button>
+      </div>
+      <div class="row-gap">
+        <div class="seg seg-icons" id="view-seg">
+          <button data-view="list" class="on" aria-label="リスト表示">☰</button>
+          <button data-view="cal" aria-label="カレンダー表示">▦</button>
+        </div>
+        <div class="seg seg-fill" id="filter-seg">
+          <button data-filter="all" class="on">すべて</button>
+          <button data-filter="office">事務所</button>
+          <button data-filter="personal">個人</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="totals">
+      <div class="card tot"><div class="tot-label">この月の振込予定</div><div id="tot-total" class="tot-value">¥0</div></div>
+      <div class="card tot"><div class="tot-label">振込済み</div><div id="tot-paid" class="tot-value teal">¥0</div></div>
+    </div>
+
+    <div id="jobs-list" class="list"></div>
+    <div id="jobs-cal" class="list hidden">
+      <div class="card cal">
+        <div class="cal-week"><span class="sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="sat">土</span></div>
+        <div id="cal-grid" class="cal-grid"></div>
+      </div>
+      <div class="legend"><span><i style="background:#5C66D6"></i>事務所</span><span><i style="background:#F283BB"></i>個人</span><span><i style="background:#1F9FAB"></i>振込済み</span></div>
+    </div>
+
+    <button id="notify-banner" class="banner" type="button">
+      <span class="bell">🔔</span>
+      <span class="banner-text"><b id="banner-title">通知を設定</b><small id="banner-sub">毎月1日 9:00に通知</small></span>
+    </button>
+  </section>
+
+  <!-- ===== 振込予定 追加/編集 ===== -->
+  <section id="screen-job-edit" class="screen screen-edit hidden">
+    <header class="edit-header">
+      <button id="job-back" class="link-btn">‹ もどる</button>
+      <h1 id="job-edit-title">振込予定を追加</h1>
+      <button id="job-save" class="btn-pink small">保存</button>
+    </header>
+    <form id="job-form" class="form">
+      <input type="hidden" id="job-id">
+      <label>案件名（何の仕事か）<input id="job-name" type="text" placeholder="例：ライブ出演（渋谷）" required></label>
+      <div class="field"><span>区分</span>
+        <div class="seg seg-fill light" id="job-kind"><button type="button" data-kind="office" class="on"><i style="background:#5C66D6"></i>事務所</button><button type="button" data-kind="personal"><i style="background:#F283BB"></i>個人</button></div>
+      </div>
+      <label>振込予定日<input id="job-date" type="date" required><small>振込予定日の月で「何月にいくら入るか」に集計されます</small></label>
+      <label>振込金額<div class="amount-box"><span>¥</span><input id="job-amount" type="text" inputmode="numeric" placeholder="30,000" required></div></label>
+      <div class="presets"><button type="button" data-amt="10000">¥10,000</button><button type="button" data-amt="30000">¥30,000</button><button type="button" data-amt="50000">¥50,000</button><button type="button" data-amt="100000">¥100,000</button></div>
+      <div class="field"><span>ステータス</span>
+        <div class="status-row" id="job-status"><button type="button" data-status="pending" class="on">未振込</button><button type="button" data-status="paid">振込済み</button></div>
+      </div>
+      <div class="field"><span>通知</span>
+        <div class="card toggles">
+          <label class="toggle-row"><span><b>当日に通知</b><small>振込予定日の朝</small></span><input id="job-notify-day" type="checkbox" class="switch" checked></label>
+          <label class="toggle-row"><span><b>前日に通知</b><small>1日前の同じ時刻</small></span><input id="job-notify-before" type="checkbox" class="switch"></label>
+          <label class="toggle-row"><span><b>通知する時刻</b></span><input id="job-notify-time" type="time" value="09:00"></label>
+        </div>
+      </div>
+      <label>メモ（任意）<textarea id="job-memo" rows="3" placeholder="集合時間、持ち物、担当者など"></textarea></label>
+      <button type="submit" class="btn-pink big">予定を保存</button>
+      <button type="button" id="job-delete" class="btn-ghost danger hidden">この予定を削除</button>
+    </form>
+  </section>
+
+  <!-- ===== Todo ボード ===== -->
+  <section id="screen-todo" class="screen screen-todo hidden">
+    <header class="todo-header">
+      <div class="row-between">
+        <h1>Todo ボード</h1>
+        <div class="row-gap">
+          <button id="todo-zoom" class="btn-glass">全体</button>
+          <button id="todo-add" class="fab-white" aria-label="メモを追加">+</button>
+        </div>
+      </div>
+      <div id="board-tabs" class="board-tabs"></div>
+      <div id="todo-hint" class="todo-hint">メモを長押しして別の枠へドラッグできます</div>
+    </header>
+    <div id="board" class="board"></div>
+  </section>
+
+  <!-- ===== メモ追加/編集 ===== -->
+  <section id="screen-card-edit" class="screen screen-card-edit hidden">
+    <header class="edit-header orange">
+      <button id="card-back" class="link-btn dark">‹ もどる</button>
+      <h1 id="card-edit-title">メモを追加</h1>
+      <button id="card-save" class="btn-teal small">貼る</button>
+    </header>
+    <form id="card-form" class="form aqua">
+      <input type="hidden" id="card-id">
+      <label>メモ<div class="postit-wrap"><textarea id="card-text" rows="4" class="postit" placeholder="例：CM撮影の衣装を3パターン用意" required></textarea></div></label>
+      <div class="field"><span>ボード</span><div id="card-board-pick" class="chips"></div></div>
+      <div class="field"><span>貼る枠</span><div id="card-col-pick" class="col-grid"></div></div>
+      <label>期限（任意）<input id="card-due" type="date"></label>
+      <div class="field"><span>関係する案件（任意）</span><div id="card-job-pick" class="chips"></div></div>
+      <button type="submit" id="card-submit" class="btn-teal big">「着手前」に貼る</button>
+      <button type="button" id="card-delete" class="btn-ghost danger hidden">このメモを削除</button>
+    </form>
+  </section>
+
+  <!-- ===== タブバー ===== -->
+  <nav id="tabbar" class="tabbar hidden">
+    <button data-tab="jobs" class="on"><span class="ico">☾</span>振込予定</button>
+    <button data-tab="todo"><span class="ico">☑</span>Todo</button>
+    <button id="tab-logout" class="tab-logout" aria-label="ログアウト">⎋</button>
+  </nav>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

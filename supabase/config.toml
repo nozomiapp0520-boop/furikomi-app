@@ -1,0 +1,3 @@
+# Supabase CLI 用（functions deploy の際に参照）
+[functions.notify]
+verify_jwt = false
