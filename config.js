@@ -5,5 +5,5 @@ window.APP_CONFIG = {
   SUPABASE_URL: "https://pwalvwpmbawyimqtkkdy.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_URmpkYL5M7diLSZPIZFHyQ_Q_1HgE7j",
   // Web Push 用の VAPID 公開鍵（docs/SETUP.md の手順で作ります）
-  VAPID_PUBLIC_KEY: ""
+  VAPID_PUBLIC_KEY: "BF9rx990lO7LdN7TTJtM1VphAoKPc2mA-PcQA-E3ToBuaCCngwu5OLixewyg8YN7NwtnlE7ccPiY_DVULhhsUL8"
 };
