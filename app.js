@@ -381,7 +381,11 @@ async function enableNotifications() {
 async function initSupabase() {
   if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return null;
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-  return createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+  return createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'furikomi-auth', storage: window.localStorage,
+      // iOS の Web Locks の不具合で待ち続けないよう、ロックは使わない
+      lock: async (_name, _timeout, fn) => fn() }
+  });
 }
 async function sendOtp(e) {
   e.preventDefault(); const email = $('#login-email').value.trim(); const msg = $('#login-msg');
@@ -459,9 +463,20 @@ function bind() {
     return;
   }
   // ログイン画面なし：初回は裏で匿名アカウントを自動作成し、以後はこの端末に紐づく
-  const { data } = await S.sb.auth.getSession();
-  if (data.session) { await onLoggedIn(data.session.user); return; }
+  // 保持の仕組みを二重にする：supabase-js の保存に加えて、自前でもトークンを控えておく
+  const SAVE_KEY = 'furikomi-session-backup';
+  const backup = (sess) => { try { if (sess) localStorage.setItem(SAVE_KEY, JSON.stringify({ access_token: sess.access_token, refresh_token: sess.refresh_token })); } catch (_) {} };
+  S.sb.auth.onAuthStateChange((ev, sess) => { if (sess) backup(sess); });
+  let { data } = await S.sb.auth.getSession();
+  if (!data.session) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (saved && saved.refresh_token) { const r = await S.sb.auth.setSession(saved); if (r.data && r.data.session) data = r.data; }
+    } catch (e) { console.warn('セッション復元に失敗', e); }
+  }
+  if (data.session) { backup(data.session); await onLoggedIn(data.session.user); return; }
   const { data: anon, error } = await S.sb.auth.signInAnonymously();
+  if (anon && anon.session) backup(anon.session);
   if (error || !anon.user) {
     console.error(error);
     toast('サーバーに接続できないため、この端末の中だけに保存します');
