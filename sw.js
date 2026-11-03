@@ -1,6 +1,6 @@
 /* Service Worker：オフライン表示とプッシュ通知 */
-const CACHE = 'furikomi-v1';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './config.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'furikomi-v3';
+const ASSETS = ['./', './index.html', './styles.css', './styles.css?v=3', './app.js', './app.js?v=3', './config.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -10,6 +10,8 @@ self.addEventListener('fetch', (e) => {
   // アプリ本体はネット優先、取れなければキャッシュ
   e.respondWith(fetch(e.request).then((r) => { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); return r; }).catch(() => caches.match(e.request)));
 });
+
+self.addEventListener('message', (e) => { if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting(); });
 
 self.addEventListener('push', (e) => {
   let data = { title: '振込予定', body: '', url: './' };

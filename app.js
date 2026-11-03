@@ -505,7 +505,16 @@ async function deleteSheet() {
 }
 
 /* ===================== 通知 ===================== */
-async function registerSW() { if (!('serviceWorker' in navigator)) return null; try { return await navigator.serviceWorker.register('sw.js'); } catch (e) { console.warn('SW登録失敗', e); return null; } }
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('sw.js');
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (refreshing) return; refreshing = true; location.reload(); });
+    reg.addEventListener('updatefound', () => { const nw = reg.installing; nw && nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' }); }); });
+    return reg;
+  } catch (e) { console.warn('SW登録失敗', e); return null; }
+}
 function b64ToU8(b64) { const p = '='.repeat((4 - (b64.length % 4)) % 4); const s = (b64 + p).replace(/-/g, '+').replace(/_/g, '/'); const r = atob(s); return Uint8Array.from([...r].map((c) => c.charCodeAt(0))); }
 async function enableNotifications() {
   if (!('Notification' in window) || !('PushManager' in window)) { toast('この表示では通知が使えません。Safariの共有メニューから「ホーム画面に追加」して、そのアイコンから開いてください'); return; }

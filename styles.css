@@ -353,3 +353,18 @@ body{font-size:1rem}
   .sav-body{max-width:720px;margin:0 auto}
   .sky{height:360px}.sky-art{height:300px}
 }
+
+/* ===== タブバー：位置を固定して、画面によってズレないように ===== */
+.tabbar{height:calc(64px + var(--safe-bottom));padding:6px 0 var(--safe-bottom);align-items:flex-start}
+.tabbar button{height:52px;gap:3px}
+.tabbar .ico{font-size:22px;line-height:1;height:26px;display:flex;align-items:center;justify-content:center}
+.screen{padding-bottom:calc(84px + var(--safe-bottom))}
+.screen-jobs{padding-bottom:calc(160px + var(--safe-bottom))}
+.banner{bottom:calc(78px + var(--safe-bottom))}
+.toast{bottom:calc(150px + var(--safe-bottom))}
+.screen{animation:none}
+.list,.totals{animation:none}
+/* 日付欄：確実にコンパクトに */
+.form input[type=date],.sheet-box input[type=date]{width:auto!important;min-width:0;max-width:220px;display:block}
+/* 金額欄：内側の枠を完全に消す */
+.form .amount-box input,.sheet-box .amount-box input,.form .amount-box input:focus{box-shadow:none!important;outline:none!important;border:0!important;background:transparent!important;border-radius:0!important}
