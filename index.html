@@ -74,8 +74,8 @@
       </div>
       <div class="row-gap">
         <div class="seg seg-icons" id="view-seg">
-          <button data-view="list" class="on" aria-label="リスト表示">☰</button>
-          <button data-view="cal" aria-label="カレンダー表示">▦</button>
+          <button data-view="list" class="on" aria-label="リスト表示"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+          <button data-view="cal" aria-label="カレンダー表示"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="5"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></button>
         </div>
         <div class="seg seg-fill" id="filter-seg">
           <button data-filter="all" class="on">すべて</button>
@@ -172,10 +172,59 @@
     </form>
   </section>
 
+  <!-- ===== 二人貯金（全員で共有） ===== -->
+  <section id="screen-savings" class="screen screen-savings hidden">
+    <header class="sav-header">
+      <div class="row-between">
+        <div><div class="sav-kicker">ふたりの</div><h1>二人貯金</h1></div>
+        <button id="sav-add-note" class="fab-white green" aria-label="メモを追加">✎</button>
+      </div>
+    </header>
+    <div class="sav-body">
+      <div class="sav-total card">
+        <div class="sav-total-label">いまの貯金額</div>
+        <div id="sav-total" class="sav-total-value">¥0</div>
+        <div class="sav-actions">
+          <button id="sav-in" class="btn-green">＋ 入金</button>
+          <button id="sav-out" class="btn-outline-green">− 出金</button>
+        </div>
+      </div>
+
+      <div class="sav-sec-head"><h2>やりたいこと・予算</h2><button id="sav-add-wish" class="link-btn green">＋ 追加</button></div>
+      <div id="wish-list" class="wish-list"></div>
+
+      <div class="sav-sec-head"><h2>メモ</h2></div>
+      <div id="note-list" class="note-list"></div>
+
+      <div class="sav-sec-head"><h2>入出金の履歴</h2></div>
+      <div id="entry-list" class="entry-list"></div>
+    </div>
+  </section>
+
+  <!-- 入力シート（貯金用） -->
+  <div id="sheet" class="sheet hidden">
+    <div class="sheet-bg"></div>
+    <form id="sheet-form" class="sheet-box">
+      <h3 id="sheet-title">入金</h3>
+      <input type="hidden" id="sheet-id">
+      <label id="sheet-f-amount">金額<div class="amount-box green"><span>¥</span><input id="sheet-amount" type="text" inputmode="numeric" placeholder="10,000"></div></label>
+      <label id="sheet-f-title">やりたいこと<input id="sheet-text" type="text" placeholder="例：温泉旅行"></label>
+      <label id="sheet-f-budget">予算<div class="amount-box green"><span>¥</span><input id="sheet-budget" type="text" inputmode="numeric" placeholder="50,000"></div></label>
+      <label id="sheet-f-note">メモ<textarea id="sheet-note" rows="3" placeholder="メモ"></textarea></label>
+      <label id="sheet-f-date">日付<input id="sheet-date" type="date"></label>
+      <div class="sheet-btns">
+        <button type="button" id="sheet-cancel" class="btn-ghost">キャンセル</button>
+        <button type="button" id="sheet-delete" class="btn-ghost danger hidden">削除</button>
+        <button type="submit" id="sheet-ok" class="btn-green">保存</button>
+      </div>
+    </form>
+  </div>
+
   <!-- ===== タブバー ===== -->
   <nav id="tabbar" class="tabbar hidden">
-    <button data-tab="jobs" class="on"><span class="ico">☾</span>振込予定</button>
-    <button data-tab="todo"><span class="ico">☑</span>Todo</button>
+    <button data-tab="todo" class="on"><span class="ico">☑</span>Todo</button>
+    <button data-tab="jobs"><span class="ico">☾</span>振込予定</button>
+    <button data-tab="savings"><span class="ico">♡</span>二人貯金</button>
     <button id="tab-logout" class="tab-logout" aria-label="ログアウト">⎋</button>
   </nav>
 

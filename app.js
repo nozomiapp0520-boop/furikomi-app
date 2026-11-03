@@ -44,6 +44,9 @@ class LocalStore {
   async upsert(table, row) { const arr = this.data[table]; const i = arr.findIndex((r) => r.id === row.id); if (i >= 0) arr[i] = { ...arr[i], ...row }; else arr.push(row); this._save(); return row; }
   async remove(table, id) { this.data[table] = this.data[table].filter((r) => r.id !== id); this._save(); }
   async savePush() { /* ローカルモードでは何もしない */ }
+  async loadShared() { this.data.shared = this.data.shared || { savings_entries: [], wishes: [], shared_notes: [] }; return JSON.parse(JSON.stringify(this.data.shared)); }
+  async upsertShared(table, row) { const arr = this.data.shared[table]; const i = arr.findIndex((r) => r.id === row.id); if (i >= 0) arr[i] = { ...arr[i], ...row }; else arr.push(row); this._save(); return row; }
+  async removeShared(table, id) { this.data.shared[table] = this.data.shared[table].filter((r) => r.id !== id); this._save(); }
 }
 
 class SupaStore {
@@ -69,6 +72,17 @@ class SupaStore {
     const { error } = await this.sb.from(table).upsert(out); if (error) throw error; return row;
   }
   async remove(table, id) { const { error } = await this.sb.from(table).delete().eq('id', id); if (error) throw error; }
+  async loadShared() {
+    const [e, w, n] = await Promise.all([
+      this.sb.from('savings_entries').select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
+      this.sb.from('wishes').select('*').order('position').order('created_at'),
+      this.sb.from('shared_notes').select('*').order('created_at', { ascending: false })
+    ]);
+    for (const r of [e, w, n]) if (r.error) throw r.error;
+    return { savings_entries: e.data, wishes: w.data, shared_notes: n.data };
+  }
+  async upsertShared(table, row) { const { error } = await this.sb.from(table).upsert({ ...row, created_by: this.userId }); if (error) throw error; return row; }
+  async removeShared(table, id) { const { error } = await this.sb.from(table).delete().eq('id', id); if (error) throw error; }
   async savePush(sub) {
     const j = sub.toJSON();
     const { error } = await this.sb.from('push_subscriptions').upsert({ user_id: this.userId, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: 'endpoint' });
@@ -84,7 +98,8 @@ const S = {
   filter: 'all', view: 'list',
   activeBoard: null, overview: false, selectedCard: null, editingCol: null,
   edit: { kind: 'office', status: 'pending' },
-  cardEdit: { board: null, col: null, job: null, addingCol: false }
+  cardEdit: { board: null, col: null, job: null, addingCol: false },
+  shared: { savings_entries: [], wishes: [], shared_notes: [] }, sharedLoaded: false
 };
 
 /* ===================== 画面切り替え ===================== */
@@ -92,9 +107,9 @@ function show(id) {
   $$('.screen').forEach((s) => s.classList.add('hidden'));
   $('#' + id).classList.remove('hidden');
   const tab = $('#tabbar');
-  const isMain = id === 'screen-jobs' || id === 'screen-todo';
+  const isMain = id === 'screen-jobs' || id === 'screen-todo' || id === 'screen-savings';
   tab.classList.toggle('hidden', !isMain);
-  $$('#tabbar button[data-tab]').forEach((b) => b.classList.toggle('on', (b.dataset.tab === 'jobs' && id === 'screen-jobs') || (b.dataset.tab === 'todo' && id === 'screen-todo')));
+  $$('#tabbar button[data-tab]').forEach((b) => b.classList.toggle('on', (b.dataset.tab === 'jobs' && id === 'screen-jobs') || (b.dataset.tab === 'todo' && id === 'screen-todo') || (b.dataset.tab === 'savings' && id === 'screen-savings')));
   window.scrollTo(0, 0);
 }
 let toastTimer;
@@ -391,6 +406,104 @@ async function saveCard(e) {
   catch (err) { console.error(err); toast('保存に失敗しました: ' + (err.message || err)); }
 }
 
+/* ===================== 二人貯金（全員で共有） ===================== */
+async function loadShared() {
+  try { S.shared = await S.store.loadShared(); S.sharedLoaded = true; }
+  catch (e) { console.error(e); toast('共有データの読み込みに失敗: ' + (e.message || e)); }
+}
+function savTotal() { return S.shared.savings_entries.reduce((a, r) => a + Number(r.amount), 0); }
+function renderSavings() {
+  const total = savTotal();
+  $('#sav-total').textContent = yen(total);
+  const wl = $('#wish-list'); wl.innerHTML = '';
+  if (!S.shared.wishes.length) wl.innerHTML = '<div class="empty green">やりたいことを追加してみましょう</div>';
+  for (const w of S.shared.wishes) {
+    const budget = Number(w.budget || 0);
+    const pct = budget > 0 ? Math.min(100, Math.round(total / budget * 100)) : 100;
+    const remain = Math.max(0, budget - total);
+    const el = document.createElement('button'); el.className = 'wish' + (w.done ? ' done' : '');
+    el.innerHTML = `<div class="row1"><span class="wt"></span><span class="wb">${budget ? yen(budget) : '予算なし'}</span></div>
+      ${budget ? `<div class="bar${pct >= 100 ? ' full' : ''}"><i style="width:${pct}%"></i></div><div class="wm">${w.done ? '達成しました ✦' : (pct >= 100 ? 'いまの貯金で行ける！' : 'あと ' + yen(remain) + '（' + pct + '%）')}</div>` : ''}
+      ${w.memo ? '<div class="wnote"></div>' : ''}`;
+    $('.wt', el).textContent = w.title; if (w.memo) $('.wnote', el).textContent = w.memo;
+    el.addEventListener('click', () => openSheet('wish', w));
+    wl.appendChild(el);
+  }
+  const nl = $('#note-list'); nl.innerHTML = '';
+  if (!S.shared.shared_notes.length) nl.innerHTML = '<div class="empty green">右上の ✎ からメモを貼れます</div>';
+  for (const n of S.shared.shared_notes) {
+    const el = document.createElement('button'); el.className = 'note'; el.textContent = n.text;
+    const sm = document.createElement('small'); sm.textContent = (n.created_at || '').slice(0, 10).replace(/-/g, '/'); el.appendChild(sm);
+    el.addEventListener('click', () => openSheet('note', n)); nl.appendChild(el);
+  }
+  const el2 = $('#entry-list'); el2.innerHTML = '';
+  if (!S.shared.savings_entries.length) el2.innerHTML = '<div class="empty green">まだ入出金がありません</div>';
+  for (const r of S.shared.savings_entries.slice(0, 50)) {
+    const el = document.createElement('button'); el.className = 'entry';
+    const a = Number(r.amount);
+    el.innerHTML = `<span class="ed">${(r.entry_date || '').slice(5).replace('-', '/')}</span><span class="en"></span><span class="ea ${a >= 0 ? 'in' : 'out'}">${a >= 0 ? '+' : '−'}${yen(Math.abs(a)).slice(1)}</span>`;
+    $('.en', el).textContent = r.note || (a >= 0 ? '入金' : '出金');
+    el.addEventListener('click', () => openSheet(a >= 0 ? 'in' : 'out', r)); el2.appendChild(el);
+  }
+}
+const SHEET = { mode: null, row: null };
+function openSheet(mode, row) {
+  SHEET.mode = mode; SHEET.row = row || null;
+  const titles = { in: '入金', out: '出金', wish: 'やりたいこと', note: 'メモ' };
+  $('#sheet-title').textContent = (row ? '' : '') + titles[mode] + (row ? 'を編集' : 'を追加');
+  const f = (id, on) => $('#' + id).classList.toggle('hidden', !on);
+  f('sheet-f-amount', mode === 'in' || mode === 'out'); f('sheet-f-date', mode === 'in' || mode === 'out');
+  f('sheet-f-title', mode === 'wish'); f('sheet-f-budget', mode === 'wish'); f('sheet-f-note', true);
+  $('#sheet-amount').value = row ? Math.abs(Number(row.amount)).toLocaleString('ja-JP') : '';
+  $('#sheet-date').value = row ? row.entry_date : todayStr();
+  $('#sheet-text').value = row ? (row.title || '') : '';
+  $('#sheet-budget').value = row && row.budget ? Number(row.budget).toLocaleString('ja-JP') : '';
+  $('#sheet-note').value = row ? (row.memo || row.note || row.text || '') : '';
+  $('#sheet-note').placeholder = mode === 'note' ? 'メモの内容' : (mode === 'wish' ? 'メモ（任意）' : '何の入金/出金か（任意）');
+  $('#sheet-note').required = mode === 'note';
+  $('#sheet-delete').classList.toggle('hidden', !row);
+  $('#sheet-ok').textContent = mode === 'wish' && row ? (row.done ? '保存（未達成に戻す）' : '保存') : '保存';
+  if (mode === 'wish' && row) { $('#sheet-ok').textContent = '保存'; }
+  $('#sheet').classList.remove('hidden');
+  setTimeout(() => { const first = mode === 'wish' ? '#sheet-text' : (mode === 'note' ? '#sheet-note' : '#sheet-amount'); $(first).focus(); }, 60);
+}
+function closeSheet() { $('#sheet').classList.add('hidden'); }
+async function saveSheet(e) {
+  e && e.preventDefault();
+  const m = SHEET.mode, row = SHEET.row; const num = (v) => Number(String(v).replace(/[^\d]/g, ''));
+  try {
+    if (m === 'in' || m === 'out') {
+      const a = num($('#sheet-amount').value); if (!a) { toast('金額を入れてください'); return; }
+      const r = { id: row ? row.id : uid(), amount: m === 'in' ? a : -a, note: $('#sheet-note').value.trim(), entry_date: $('#sheet-date').value || todayStr() };
+      await S.store.upsertShared('savings_entries', r);
+      if (row) Object.assign(row, r); else S.shared.savings_entries.unshift({ ...r, created_at: new Date().toISOString() });
+      S.shared.savings_entries.sort((x, y) => (y.entry_date || '').localeCompare(x.entry_date || ''));
+    } else if (m === 'wish') {
+      const title = $('#sheet-text').value.trim(); if (!title) { toast('やりたいことを入れてください'); return; }
+      const r = { id: row ? row.id : uid(), title, budget: num($('#sheet-budget').value) || 0, memo: $('#sheet-note').value.trim(), done: row ? !!row.done : false, position: row ? row.position : S.shared.wishes.length };
+      await S.store.upsertShared('wishes', r);
+      if (row) Object.assign(row, r); else S.shared.wishes.push(r);
+    } else if (m === 'note') {
+      const text = $('#sheet-note').value.trim(); if (!text) { toast('メモを入れてください'); return; }
+      const r = { id: row ? row.id : uid(), text };
+      await S.store.upsertShared('shared_notes', r);
+      if (row) Object.assign(row, r); else S.shared.shared_notes.unshift({ ...r, created_at: new Date().toISOString() });
+    }
+    closeSheet(); renderSavings(); toast('保存しました');
+  } catch (err) { console.error(err); toast('保存に失敗: ' + (err.message || err)); }
+}
+async function deleteSheet() {
+  const m = SHEET.mode, row = SHEET.row; if (!row) return;
+  if (m === 'wish' && !row.done && confirm('「' + row.title + '」を達成済みにしますか？\n（キャンセル → 削除の確認へ）')) {
+    row.done = true; await S.store.upsertShared('wishes', row); closeSheet(); renderSavings(); toast('達成おめでとう ✦'); return;
+  }
+  if (!confirm('削除しますか？')) return;
+  const table = m === 'wish' ? 'wishes' : (m === 'note' ? 'shared_notes' : 'savings_entries');
+  await S.store.removeShared(table, row.id);
+  S.shared[table] = S.shared[table].filter((r) => r.id !== row.id);
+  closeSheet(); renderSavings(); toast('削除しました');
+}
+
 /* ===================== 通知 ===================== */
 async function registerSW() { if (!('serviceWorker' in navigator)) return null; try { return await navigator.serviceWorker.register('sw.js'); } catch (e) { console.warn('SW登録失敗', e); return null; } }
 function b64ToU8(b64) { const p = '='.repeat((4 - (b64.length % 4)) % 4); const s = (b64 + p).replace(/-/g, '+').replace(/_/g, '/'); const r = atob(s); return Uint8Array.from([...r].map((c) => c.charCodeAt(0))); }
@@ -451,7 +564,7 @@ async function loadAndStart() {
     const d = await S.store.loadAll();
     S.jobs = d.jobs || []; S.boards = d.boards || []; S.columns = d.columns || []; S.cards = d.cards || [];
     await ensureDefaultBoard();
-    renderJobs(); renderTodo(); show('screen-jobs');
+    renderJobs(); renderTodo(); show('screen-todo');
   } catch (e) { console.error(e); toast('読み込みに失敗: ' + (e.message || e)); }
 }
 
@@ -479,8 +592,22 @@ function bind() {
   $('#card-save').addEventListener('click', saveCard);
   $('#card-form').addEventListener('submit', saveCard);
   $('#card-delete').addEventListener('click', async () => { const id = $('#card-id').value; if (!id || !confirm('このメモを削除しますか？')) return; await S.store.remove('cards', id); S.cards = S.cards.filter((c) => c.id !== id); renderTodo(); show('screen-todo'); toast('削除しました'); });
-  $$('#tabbar button[data-tab]').forEach((b) => b.addEventListener('click', () => { show(b.dataset.tab === 'jobs' ? 'screen-jobs' : 'screen-todo'); if (b.dataset.tab === 'todo') renderTodo(); else renderJobs(); }));
+  $$('#tabbar button[data-tab]').forEach((b) => b.addEventListener('click', async () => {
+    const t = b.dataset.tab;
+    if (t === 'jobs') { show('screen-jobs'); renderJobs(); }
+    else if (t === 'todo') { show('screen-todo'); renderTodo(); }
+    else { show('screen-savings'); await loadShared(); renderSavings(); }
+  }));
   $('#tab-logout').addEventListener('click', logout);
+  $('#sav-in').addEventListener('click', () => openSheet('in'));
+  $('#sav-out').addEventListener('click', () => openSheet('out'));
+  $('#sav-add-wish').addEventListener('click', () => openSheet('wish'));
+  $('#sav-add-note').addEventListener('click', () => openSheet('note'));
+  $('#sheet-form').addEventListener('submit', saveSheet);
+  $('#sheet-cancel').addEventListener('click', closeSheet);
+  $('.sheet-bg').addEventListener('click', closeSheet);
+  $('#sheet-delete').addEventListener('click', deleteSheet);
+  $$('#sheet-amount, #sheet-budget').forEach((i) => i.addEventListener('blur', () => { const n = Number(String(i.value).replace(/[^\d]/g, '')); i.value = n ? n.toLocaleString('ja-JP') : ''; }));
   window.addEventListener('orientationchange', () => setTimeout(renderTodo, 150));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) renderBanner(); });
 }

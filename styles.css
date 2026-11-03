@@ -246,3 +246,110 @@ input,textarea{line-height:1.25}
 .screen-jobs{padding-bottom:calc(176px + var(--safe-bottom))}
 .toast{bottom:calc(178px + var(--safe-bottom))}
 .cell.has.over .d{background:transparent;color:#B2407A}
+
+/* ===== 二人貯金 ===== */
+:root{--gr:#1F6F5B;--gr-dark:#165244;--gr-soft:#DCEFE6;--gr-ground:#EEF6F1;--gold:#E8C458;--gold-dark:#8A6A10;--rose:#F283BB}
+.screen-savings{background:var(--gr-ground);color:#1E3A32}
+.sav-header{padding:calc(58px + var(--safe-top)) 22px 14px;background:linear-gradient(180deg,#1F6F5B 0%,#2E8A72 70%,var(--gr-ground) 100%);color:#fff}
+.sav-kicker{font-size:12px;font-weight:700;color:#CDEBDD;letter-spacing:.12em}
+.sav-header h1{margin:0;font-family:'Kiwi Maru','Zen Maru Gothic',serif;font-weight:500;font-size:30px;letter-spacing:.04em;text-shadow:0 2px 0 #165244}
+.fab-white.green{color:var(--gr);font-size:20px}
+.sav-body{padding:0 22px 24px;display:flex;flex-direction:column;gap:14px}
+.sav-total{padding:18px 20px 16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 0 0 2px #CDEBDD,0 10px 24px rgba(31,111,91,.18);margin-top:-6px;position:relative}
+.sav-total::before{content:"";position:absolute;top:-10px;right:18px;width:40px;height:40px;border-radius:20px;background:var(--gold);box-shadow:0 0 0 3px #fff,inset -3px -3px 0 rgba(0,0,0,.08)}
+.sav-total-label{font-size:12px;color:#4F7A6C;font-weight:700}
+.sav-total-value{font-size:34px;font-weight:700;color:var(--gr-dark);letter-spacing:.01em}
+.sav-actions{display:flex;gap:8px;margin-top:8px}
+.btn-green{flex:1;height:48px;border:none;border-radius:999px;background:var(--gr);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(31,111,91,.3)}
+.btn-outline-green{flex:1;height:48px;border:2px solid var(--gr);border-radius:999px;background:#fff;color:var(--gr);font-size:15px;font-weight:700}
+.link-btn.green{color:var(--gr);font-size:14px}
+.sav-sec-head{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.sav-sec-head h2{margin:0;font-size:15px;font-weight:700;color:#2E5A4E}
+.wish-list,.note-list,.entry-list{display:flex;flex-direction:column;gap:10px}
+.wish{width:100%;text-align:left;border:none;background:#fff;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 0 0 2px #CDEBDD,0 6px 16px rgba(31,111,91,.08)}
+.wish.done{opacity:.6}.wish.done .wt{text-decoration:line-through}
+.wish .row1{display:flex;align-items:center;gap:10px}
+.wish .wt{flex:1;font-size:16px;font-weight:700;min-width:0}
+.wish .wb{font-size:15px;font-weight:700;color:var(--gr-dark);white-space:nowrap}
+.wish .bar{height:8px;border-radius:4px;background:var(--gr-soft);overflow:hidden}
+.wish .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gr),#5FB79C);transition:width .4s cubic-bezier(.2,.8,.2,1)}
+.wish .bar.full i{background:linear-gradient(90deg,var(--gold),#F3D983)}
+.wish .wm{font-size:12px;color:#4F7A6C}
+.wish .wnote{font-size:13px;color:#2E5A4E;white-space:pre-wrap}
+.note{position:relative;width:100%;text-align:left;border:none;border-radius:4px 4px 14px 4px;background:var(--postit);padding:14px 14px 12px;font-size:14px;font-weight:700;color:#2B2320;line-height:1.5;white-space:pre-wrap;box-shadow:2px 4px 8px rgba(31,111,91,.15);transform:rotate(-.8deg)}
+.note:nth-child(even){transform:rotate(.9deg)}
+.note::before{content:"";position:absolute;top:-7px;left:50%;width:46px;height:14px;margin-left:-23px;background:rgba(255,255,255,.55);border:1px solid rgba(61,42,20,.12);transform:rotate(-2deg);border-radius:2px}
+.note small{display:block;font-weight:400;font-size:11px;color:#7A6A50;margin-top:6px}
+.entry{width:100%;text-align:left;border:none;background:#fff;border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 0 0 1.5px #DCEFE6}
+.entry .ed{font-size:12px;color:#4F7A6C;width:46px;flex-shrink:0}
+.entry .en{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .ea{font-size:15px;font-weight:700;white-space:nowrap}
+.entry .ea.in{color:var(--gr)}.entry .ea.out{color:#C93A6E}
+.empty.green{color:#4F7A6C}
+.tabbar button[data-tab=savings].on{color:var(--gr)}
+/* 入力シート */
+.sheet{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end}
+.sheet-bg{position:absolute;inset:0;background:rgba(30,58,50,.45);animation:fade .2s both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet-box{position:relative;width:100%;background:#fff;border-radius:26px 26px 0 0;padding:20px 22px calc(28px + var(--safe-bottom));display:flex;flex-direction:column;gap:14px;animation:sheet-up .28s cubic-bezier(.2,.8,.2,1) both;max-height:88vh;overflow-y:auto}
+@keyframes sheet-up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet-box h3{margin:0;font-size:18px;color:#1E3A32}
+.sheet-box label{display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:700;color:#2E5A4E}
+.sheet-box input[type=text],.sheet-box input[type=date],.sheet-box textarea,.sheet-box .amount-box{width:100%;border:none;border-radius:999px;background:#F2F8F5;padding:0 18px;height:52px;font-size:17px;color:#1E3A32;box-shadow:0 0 0 2px #DCEFE6;outline:none;line-height:1}
+.sheet-box textarea{border-radius:18px;padding:14px 18px;height:auto;min-height:90px;resize:none;line-height:1.5}
+.sheet-box .amount-box{display:flex;align-items:center;gap:8px;height:60px}
+.sheet-box .amount-box span{font-size:20px;font-weight:700;color:#4F7A6C}
+.sheet-box .amount-box input{flex:1;min-width:0;border:none;background:transparent;font-size:24px;font-weight:700;box-shadow:none;height:auto;padding:0}
+.sheet-btns{display:flex;gap:8px;align-items:center}
+.sheet-btns .btn-green{flex:1}
+.wish{display:flex;align-items:stretch;justify-content:flex-start;text-align:left}
+.wish .row1{width:100%}.wish .bar{width:100%}.wish .wm,.wish .wnote{width:100%}
+.note{display:block;text-align:left}
+.entry{justify-content:flex-start}
+
+/* ===== 修正：日付欄の幅、金額欄の二重枠、アイコンの位置 ===== */
+.form label:has(> input[type=date]){align-items:flex-start}
+.form input[type=date],.sheet-box input[type=date]{width:auto;min-width:200px;max-width:240px;padding:0 16px;-webkit-appearance:none;appearance:none;text-align:left}
+.form input[type=date]::-webkit-date-and-time-value,.sheet-box input[type=date]::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+.form .amount-box{box-shadow:0 0 0 2px var(--lav),0 6px 16px rgba(92,102,214,.1)}
+.form .amount-box input[type=text],.form .amount-box input[type=text]:focus,.sheet-box .amount-box input[type=text]{box-shadow:none!important;border:none;border-radius:0;background:transparent;padding:0;height:auto}
+.form .amount-box:focus-within{box-shadow:0 0 0 2px var(--blue),0 6px 16px rgba(92,102,214,.1)}
+.seg-icons button{width:44px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.seg-icons button svg{display:block}
+.form.aqua label:has(> input[type=date]){align-items:flex-start}
+.tabbar button[data-tab=todo].on{color:var(--or-dark)}
+
+/* ===== 達成済みは薄くするだけ ===== */
+.wish.done{opacity:.55}
+.wish.done .wt{text-decoration:none}
+
+/* ===== 画面サイズに追従（iPhone 14 Pro / 17 Pro など全幅・全高に対応） ===== */
+:root{--gutter:clamp(16px,5.6vw,26px)}
+html{font-size:clamp(15px,4.1vw,17px)}
+body{font-size:1rem}
+.jobs-header,.sav-header{padding-left:var(--gutter);padding-right:var(--gutter)}
+.totals,.list,.sav-body{padding-left:var(--gutter);padding-right:var(--gutter)}
+.edit-header{padding-left:var(--gutter);padding-right:var(--gutter)}
+.form{padding-left:var(--gutter);padding-right:var(--gutter)}
+.todo-header{padding-left:var(--gutter);padding-right:var(--gutter)}
+.board{padding-left:var(--gutter);padding-right:var(--gutter)}
+.banner{left:var(--gutter);right:var(--gutter)}
+.form.aqua{margin-left:calc(var(--gutter) - 8px);margin-right:calc(var(--gutter) - 8px)}
+.sky{height:clamp(380px,50vh,470px)}
+.sky-art{height:clamp(300px,39vh,360px)}
+.title-glow,.sav-header h1{font-size:clamp(26px,7.6vw,32px)}
+.todo-header h1{font-size:clamp(22px,6.6vw,28px)}
+.tot-value,.sav-total-value{font-size:clamp(20px,5.6vw,26px)}
+.sav-total-value{font-size:clamp(28px,8.6vw,38px)}
+.month-label{font-size:clamp(18px,5vw,22px)}
+.cell{min-height:clamp(52px,14vw,64px)}
+@media (min-width:430px){ .totals{gap:12px} .list{gap:12px} .board{gap:14px} }
+@media (min-height:900px){ .sky{height:470px} }
+/* 横向き：2カラムにして余白を活かす */
+@media (orientation:landscape) and (min-width:700px){
+  .totals{grid-template-columns:repeat(2,minmax(0,1fr));max-width:720px;margin:0 auto;width:100%}
+  .list{max-width:720px;margin:0 auto;width:100%}
+  .form,.form.aqua{max-width:640px;margin-left:auto;margin-right:auto}
+  .sav-body{max-width:720px;margin:0 auto}
+  .sky{height:360px}.sky-art{height:300px}
+}
