@@ -368,3 +368,17 @@ body{font-size:1rem}
 .form input[type=date],.sheet-box input[type=date]{width:auto!important;min-width:0;max-width:220px;display:block}
 /* 金額欄：内側の枠を完全に消す */
 .form .amount-box input,.sheet-box .amount-box input,.form .amount-box input:focus{box-shadow:none!important;outline:none!important;border:0!important;background:transparent!important;border-radius:0!important}
+
+/* ===== 日付欄：自前の見た目（中にネイティブ入力を透明で重ねる） ===== */
+.date-box{position:relative;display:flex;align-items:center;gap:10px;height:54px;padding:0 18px;border-radius:999px;background:#fff;color:var(--ink);box-shadow:0 0 0 2px var(--lav),0 6px 16px rgba(92,102,214,.1);overflow:hidden}
+.date-box svg{flex-shrink:0;color:var(--muted)}
+.date-text{font-size:17px;font-weight:700;line-height:1}
+.date-text.empty{color:#A7A6DC;font-weight:400}
+.date-box input[type=date]{position:absolute;inset:0;width:100%!important;max-width:none!important;height:100%;opacity:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;-webkit-appearance:none;appearance:none;font-size:16px}
+.date-box input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.date-box:focus-within{box-shadow:0 0 0 2px var(--blue),0 6px 16px rgba(92,102,214,.1)}
+.form.aqua .date-box{border-radius:16px;box-shadow:0 4px 12px rgba(61,42,20,.12);color:#2B2320}
+.form.aqua .date-box svg{color:var(--tl-text)}
+.sheet-box .date-box{background:#F2F8F5;box-shadow:0 0 0 2px #DCEFE6;color:#1E3A32}
+.sheet-box .date-box svg{color:#4F7A6C}
+.form label:has(> .date-box){align-items:stretch}

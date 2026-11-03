@@ -206,6 +206,7 @@ function openJobEdit(j, presetDate) {
   $$('#job-kind button').forEach((b) => b.classList.toggle('on', b.dataset.kind === S.edit.kind));
   $$('#job-status button').forEach((b) => b.classList.toggle('on', b.dataset.status === S.edit.status));
   $('#job-delete').classList.toggle('hidden', !j);
+  syncDates();
   show('screen-job-edit');
   if (!j) setTimeout(() => $('#job-name').focus(), 50);
 }
@@ -375,7 +376,7 @@ function openCardEdit(c, presetCol) {
   $('#card-edit-title').textContent = c ? 'メモを編集' : 'メモを追加';
   $('#card-id').value = c ? c.id : ''; $('#card-text').value = c ? c.text : ''; $('#card-due').value = c ? (c.due || '') : '';
   $('#card-delete').classList.toggle('hidden', !c);
-  renderCardEdit(); show('screen-card-edit'); if (!c) setTimeout(() => $('#card-text').focus(), 50);
+  syncDates(); renderCardEdit(); show('screen-card-edit'); if (!c) setTimeout(() => $('#card-text').focus(), 50);
 }
 function renderCardEdit() {
   const ce = S.cardEdit;
@@ -461,7 +462,7 @@ function openSheet(mode, row) {
   $('#sheet-note').value = row ? (row.memo || row.note || row.text || '') : '';
   $('#sheet-note').placeholder = mode === 'note' ? 'メモの内容' : (mode === 'wish' ? 'メモ（任意）' : '何の入金/出金か（任意）');
   $('#sheet-note').required = mode === 'note';
-  $('#sheet-delete').classList.toggle('hidden', !row);
+  $('#sheet-delete').classList.toggle('hidden', !row); syncDates();
   $('#sheet-ok').textContent = mode === 'wish' && row ? (row.done ? '保存（未達成に戻す）' : '保存') : '保存';
   if (mode === 'wish' && row) { $('#sheet-ok').textContent = '保存'; }
   $('#sheet').classList.remove('hidden');
@@ -577,7 +578,22 @@ async function loadAndStart() {
   } catch (e) { console.error(e); toast('読み込みに失敗: ' + (e.message || e)); }
 }
 
+const JA_DOW = ['日', '月', '火', '水', '木', '金', '土'];
+function fmtDateJa(v, empty) {
+  if (!v) return empty || '';
+  const [y, m, d] = v.split('-').map(Number); const dt = new Date(y, m - 1, d);
+  return y + '年' + m + '月' + d + '日（' + JA_DOW[dt.getDay()] + '）';
+}
+function bindDateBox(inputId, textId, empty) {
+  const inp = $('#' + inputId), txt = $('#' + textId); if (!inp || !txt) return;
+  const sync = () => { txt.textContent = fmtDateJa(inp.value, empty); txt.classList.toggle('empty', !inp.value); };
+  inp.addEventListener('input', sync); inp.addEventListener('change', sync);
+  new MutationObserver(sync).observe(inp, { attributes: true, attributeFilter: ['value'] });
+  inp._sync = sync; sync();
+}
+function syncDates() { ['job-date', 'card-due', 'sheet-date'].forEach((id) => { const i = $('#' + id); if (i && i._sync) i._sync(); }); }
 function bind() {
+  bindDateBox('job-date', 'job-date-text', ''); bindDateBox('card-due', 'card-due-text', '未設定'); bindDateBox('sheet-date', 'sheet-date-text', '');
   $('#login-form').addEventListener('submit', sendOtp);
   $('#otp-form').addEventListener('submit', verifyOtp);
   $('#otp-back').addEventListener('click', () => { $('#otp-form').classList.add('hidden'); $('#login-form').classList.remove('hidden'); });
