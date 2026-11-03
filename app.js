@@ -245,6 +245,13 @@ async function ensureDefaultBoard() {
   for (const [title, color] of DEFAULT_COLS) { const c = { id: uid(), board_id: b.id, title, color, position: i++ }; await S.store.upsert('columns', c); S.columns.push(c); }
 }
 
+async function purgeDoneCards() {
+  const today = todayStr();
+  const old = S.cards.filter((c) => c.done_at && c.done_at < today);
+  if (!old.length) return;
+  for (const c of old) { try { await S.store.remove('cards', c.id); } catch (e) { console.warn(e); } }
+  S.cards = S.cards.filter((c) => !old.includes(c));
+}
 function renderTodo() {
   const b = activeBoard(); if (!b) return; S.activeBoard = b.id;
   const tabs = $('#board-tabs'); tabs.innerHTML = '';
@@ -284,7 +291,7 @@ function renderTodo() {
       const m = document.createElement('div'); m.className = 'memo' + (c.id === S.selectedCard ? ' sel' : ''); m.dataset.card = c.id;
       const job = c.job_id ? S.jobs.find((j) => j.id === c.job_id) : null;
       const late = c.due && c.due < todayStr() && col.position !== boardCols(b.id).length - 1;
-      m.innerHTML = `<div class="tx"></div><div class="mt">${job ? `<span class="tag job"></span>` : ''}${c.due ? `<span class="due${late ? ' late' : ''}">⏱ ${c.due.slice(5).replace('-', '/')}</span>` : ''}</div>`;
+      m.innerHTML = `<div class="tx"></div><div class="mt">${job ? `<span class="tag job"></span>` : ''}${c.due ? `<span class="due${late ? ' late' : ''}">⏱ ${c.due.slice(5).replace('-', '/')}</span>` : ''}${c.done_at ? `<span class="gone">明日には消えます</span>` : ''}</div>`;
       $('.tx', m).textContent = c.text; if (job) $('.tag.job', m).textContent = job.name;
       attachMemoEvents(m, c);
       el.appendChild(m);
@@ -338,8 +345,10 @@ function attachMemoEvents(m, c) {
   m.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
+function isDoneColumn(colId) { const col = S.columns.find((x) => x.id === colId); if (!col) return false; const cols = boardCols(col.board_id); return cols.length > 0 && cols[cols.length - 1].id === colId; }
 async function moveCard(c, colId) {
   c.column_id = colId; c.position = colCards(colId).length; S.selectedCard = null;
+  c.done_at = isDoneColumn(colId) ? todayStr() : null;
   await S.store.upsert('cards', c); renderTodo();
 }
 async function addBoard() {
@@ -402,7 +411,7 @@ async function saveCard(e) {
   const text = $('#card-text').value.trim(); if (!text) { toast('メモを入れてください'); return; }
   const ce = S.cardEdit; if (!ce.col) { toast('貼る枠を選んでください'); return; }
   const id = ce.id || uid(); const existing = S.cards.find((c) => c.id === id);
-  const row = { id, column_id: ce.col, board_id: ce.board, text, due: $('#card-due').value || null, job_id: ce.job || null, position: existing && existing.column_id === ce.col ? existing.position : colCards(ce.col).length };
+  const row = { id, column_id: ce.col, board_id: ce.board, text, due: $('#card-due').value || null, job_id: ce.job || null, position: existing && existing.column_id === ce.col ? existing.position : colCards(ce.col).length, done_at: isDoneColumn(ce.col) ? ((existing && existing.column_id === ce.col && existing.done_at) || todayStr()) : null };
   try { await S.store.upsert('cards', row); if (existing) Object.assign(existing, row); else S.cards.push(row); S.activeBoard = ce.board; S.selectedCard = null; renderTodo(); show('screen-todo'); toast(existing ? '更新しました' : '貼りました'); }
   catch (err) { console.error(err); toast('保存に失敗しました: ' + (err.message || err)); }
 }
@@ -574,6 +583,7 @@ async function loadAndStart() {
     const d = await S.store.loadAll();
     S.jobs = d.jobs || []; S.boards = d.boards || []; S.columns = d.columns || []; S.cards = d.cards || [];
     await ensureDefaultBoard();
+    await purgeDoneCards();
     renderJobs(); renderTodo(); show('screen-todo');
   } catch (e) { console.error(e); toast('読み込みに失敗: ' + (e.message || e)); }
 }
@@ -634,7 +644,7 @@ function bind() {
   $('#sheet-delete').addEventListener('click', deleteSheet);
   $$('#sheet-amount, #sheet-budget').forEach((i) => i.addEventListener('blur', () => { const n = Number(String(i.value).replace(/[^\d]/g, '')); i.value = n ? n.toLocaleString('ja-JP') : ''; }));
   window.addEventListener('orientationchange', () => setTimeout(renderTodo, 150));
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderBanner(); });
+  document.addEventListener('visibilitychange', async () => { if (!document.hidden) { renderBanner(); const n = S.cards.length; await purgeDoneCards(); if (S.cards.length !== n) renderTodo(); } });
 }
 
 (async function main() {

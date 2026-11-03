@@ -382,3 +382,4 @@ body{font-size:1rem}
 .sheet-box .date-box{background:#F2F8F5;box-shadow:0 0 0 2px #DCEFE6;color:#1E3A32}
 .sheet-box .date-box svg{color:#4F7A6C}
 .form label:has(> .date-box){align-items:stretch}
+.memo .mt .gone{font-size:11px;color:#8FA3A4}
